@@ -7,3 +7,5 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
     MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/facebook_insights')
     DEBUG = os.getenv('FLASK_ENV') == 'development'
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    TEMP_FOLDER = 'temp'
