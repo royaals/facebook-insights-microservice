@@ -9,6 +9,7 @@ Facebook Insights API is a microservice that allows users to fetch and analyze F
 ## Features
 
 ### Core Features
+
 - 🔍 Real-time Facebook page scraping
 - 📊 Detailed page analytics and metrics
 - 💾 MongoDB data persistence
@@ -18,6 +19,7 @@ Facebook Insights API is a microservice that allows users to fetch and analyze F
 ## Tech Stack
 
 ### Backend
+
 - Python 3.8+
 - Flask (Web Framework)
 - Selenium (Web Scraping)
@@ -26,12 +28,14 @@ Facebook Insights API is a microservice that allows users to fetch and analyze F
 - OpenAI GPT-3.5 (AI Analysis)
 
 ### Storage
+
 - MongoDB (Data Storage)
-- S3 (Image Storage)
+- AWS S3 (Image Storage)
 
 ## Installation
 
 ### Prerequisites
+
 - Python 3.8 or higher
 - MongoDB
 - Chrome/Chromium browser (for Selenium)
@@ -41,12 +45,14 @@ Facebook Insights API is a microservice that allows users to fetch and analyze F
 ### Setup
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/royaals/facebook-insights-microservice.git
 cd facebook-insights-microservice
 ```
 
 2. **Create and activate virtual environment**
+
 ```bash
 # Windows
 python -m venv venv
@@ -58,14 +64,16 @@ source venv/bin/activate
 ```
 
 3. **Install dependencies**
+
 ```bash
 pip install -r requirements.txt
 ```
 
 4. **Set up environment variables**
-Create a `.env` file in the root directory
+   Create a `.env` file in the root directory
 
 5. **Initialize MongoDB**
+
 ```bash
 # Start MongoDB using Docker
 docker pull mongo
@@ -74,8 +82,9 @@ docker run -d --name mongodb -p 27017:27017 -v mongo-data:/data/db mongo
 ```
 
 6. **Run the application**
+
 ```bash
-flask run 
+flask run
 ```
 
 The API will be available at `http://localhost:5000`
@@ -83,48 +92,55 @@ The API will be available at `http://localhost:5000`
 ## API Endpoints
 
 ### Page Details
+
 ```http
 GET /api/pages/{username}
 ```
+
 Fetches detailed information about a Facebook page.
 
 ### Page Summary
+
 ```http
 POST /api/pages/{username}/summary
 ```
+
 Generates AI-powered analysis and recommendations.
 
 ### Example Response
+
 ```json
 {
-    "success": true,
-    "data": {
-        "page_name": "Example Page",
-        "category": "Technology Company",
-        "stats": {
-            "followers": 1000000,
-            "likes": 950000,
-            "followers_formatted": "1,000,000",
-            "likes_formatted": "950,000"
-        },
-        "ai_summary": {
-            "summary": "Detailed AI analysis...",
-            "page_type": "Technology Brand",
-            "engagement_level": "Very High",
-            "content_strategy": "Product launches, innovation stories"
-        }
+  "success": true,
+  "data": {
+    "page_name": "Example Page",
+    "category": "Technology Company",
+    "stats": {
+      "followers": 1000000,
+      "likes": 950000,
+      "followers_formatted": "1,000,000",
+      "likes_formatted": "950,000"
+    },
+    "ai_summary": {
+      "summary": "Detailed AI analysis...",
+      "page_type": "Technology Brand",
+      "engagement_level": "Very High",
+      "content_strategy": "Product launches, innovation stories"
     }
+  }
 }
 ```
 
 ## Usage
 
 1. **Get Page Details**
+
 ```bash
 curl http://localhost:5000/api/pages/facebook
 ```
 
 2. **Generate AI Summary**
+
 ```bash
 curl -X POST http://localhost:5000/api/pages/facebook/summary
 ```
@@ -132,15 +148,16 @@ curl -X POST http://localhost:5000/api/pages/facebook/summary
 ## Error Handling
 
 The API returns appropriate HTTP status codes and error messages:
+
 - 200: Success
 - 404: Page not found
 - 500: Server error
 
 Example error response:
+
 ```json
 {
-    "success": false,
-    "error": "Page not found"
+  "success": false,
+  "error": "Page not found"
 }
 ```
-

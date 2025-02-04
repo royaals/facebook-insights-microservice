@@ -1,0 +1,242 @@
+{
+    "info": {
+        "name": "Facebook Insights API",
+        "description": "API collection for Facebook page insights and analysis",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/health",
+                "description": "Check if the API is running"
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "url": "{{base_url}}/health"
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "body": {
+                        "status": "healthy",
+                        "message": "API is running",
+                        "server_time": "2024-02-04T14:01:45.445Z"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Get Page Details",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/pages/{{username}}",
+                "description": "Get details of a Facebook page by username",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ]
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "url": "{{base_url}}/pages/nike"
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "body": {
+                        "success": true,
+                        "data": {
+                            "page_id": "65bf1234c5d7b8a9c0123456",
+                            "page_name": "Nike",
+                            "username": "nike",
+                            "page_url": "https://facebook.com/nike",
+                            "profile_pic": "profile_pic_nike_20240204123456.jpg",
+                            "email": "media@nike.com",
+                            "website": "https://www.nike.com",
+                            "category": "Sporting Goods Company",
+                            "followers": 35000000,
+                            "likes": 33000000,
+                            "posts": [
+                                {
+                                    "post_id": "post_1",
+                                    "post_content": "Introducing our new collection! 🚀",
+                                    "comments": [
+                                        "Amazing collection! 😍",
+                                        "When will it be available?"
+                                    ]
+                                }
+                            ],
+                            "followers_type": "Active",
+                            "created_at": "2024-02-04T12:34:56.789Z"
+                        }
+                    }
+                },
+                {
+                    "name": "Error Response - Page Not Found",
+                    "originalRequest": {
+                        "method": "GET",
+                        "url": "{{base_url}}/pages/nonexistent"
+                    },
+                    "status": "Not Found",
+                    "code": 404,
+                    "body": {
+                        "success": false,
+                        "error": "Page not found"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Generate Page Summary",
+            "request": {
+                "method": "POST",
+                "url": "{{base_url}}/pages/{{username}}/summary",
+                "description": "Generate AI summary for a Facebook page",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ]
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "POST",
+                        "url": "{{base_url}}/pages/nike/summary"
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "body": {
+                        "success": true,
+                        "data": {
+                            "page_name": "Nike",
+                            "category": "Sporting Goods Company",
+                            "stats": {
+                                "followers": 35000000,
+                                "likes": 33000000,
+                                "followers_formatted": "35,000,000",
+                                "likes_formatted": "33,000,000"
+                            },
+                            "ai_summary": {
+                                "summary": "Nike maintains a strong social media presence...",
+                                "page_type": "Sports Brand",
+                                "engagement_level": "Very High",
+                                "content_strategy": "Product launches, athlete stories",
+                                "metrics": {
+                                    "followers": 35000000,
+                                    "likes": 33000000,
+                                    "engagement_rate": 94.29
+                                },
+                                "recommendations": [
+                                    "Maintain consistent posting schedule",
+                                    "Engage with follower comments regularly",
+                                    "Share athlete success stories",
+                                    "Post workout tips and routines"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Error Response - Generation Failed",
+                    "originalRequest": {
+                        "method": "POST",
+                        "url": "{{base_url}}/pages/nike/summary"
+                    },
+                    "status": "Internal Server Error",
+                    "code": 500,
+                    "body": {
+                        "success": false,
+                        "error": "Failed to generate summary"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Search Pages",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/search?q={{query}}&page={{page_number}}&per_page={{items_per_page}}",
+                    "query": [
+                        {
+                            "key": "q",
+                            "value": "{{query}}"
+                        },
+                        {
+                            "key": "page",
+                            "value": "{{page_number}}"
+                        },
+                        {
+                            "key": "per_page",
+                            "value": "{{items_per_page}}"
+                        }
+                    ]
+                },
+                "description": "Search for Facebook pages"
+            },
+            "response": [
+                {
+                    "name": "Success Response",
+                    "originalRequest": {
+                        "method": "GET",
+                        "url": "{{base_url}}/search?q=tech&page=1&per_page=2"
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "body": {
+                        "success": true,
+                        "data": {
+                            "results": [
+                                {
+                                    "page_name": "Apple",
+                                    "category": "Technology Company",
+                                    "followers": 14000000,
+                                    "likes": 13000000
+                                }
+                            ],
+                            "pagination": {
+                                "current_page": 1,
+                                "per_page": 2,
+                                "total_items": 1,
+                                "total_pages": 1
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000/api"
+        },
+        {
+            "key": "username",
+            "value": "nike"
+        },
+        {
+            "key": "query",
+            "value": "tech"
+        },
+        {
+            "key": "page_number",
+            "value": "1"
+        },
+        {
+            "key": "items_per_page",
+            "value": "10"
+        }
+    ]
+}
