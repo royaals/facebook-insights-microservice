@@ -8,6 +8,17 @@ from app.models.page import Page
 
 pages_bp = Blueprint('pages', __name__, url_prefix='/api')
 
+from flask import Blueprint, jsonify, request
+from datetime import datetime
+from bson import ObjectId
+from app import mongo
+from app.services.scraper import FacebookScraper
+from app.services.ai_summary import AISummaryService
+from app.models.page import Page
+
+# Change the blueprint registration
+pages_bp = Blueprint('pages', __name__)  # Remove url_prefix here
+
 @pages_bp.route('/', methods=['GET'])
 def welcome():
     """Welcome endpoint with API information"""
@@ -16,14 +27,6 @@ def welcome():
         db_status = "connected" if mongo.db.command('ping') else "disconnected"
     except Exception:
         db_status = "disconnected"
-
-    # Get API statistics
-    try:
-        total_pages = mongo.db.pages.count_documents({})
-        total_summaries = mongo.db.pages.count_documents({"ai_summary": {"$exists": True}})
-    except Exception:
-        total_pages = 0
-        total_summaries = 0
 
     return jsonify({
         "success": True,
@@ -37,20 +40,20 @@ def welcome():
             "endpoints": {
                 "root": {
                     "method": "GET",
-                    "url": "/api",
+                    "url": "/",
                     "description": "Welcome page and API information"
                 },
                 "get_page": {
                     "method": "GET",
-                    "url": "/api/pages/<username>",
+                    "url": "/pages/<username>",
                     "description": "Get Facebook page details and analytics",
-                    "example": "/api/pages/nike"
+                    "example": "/pages/nike"
                 },
                 "generate_summary": {
                     "method": "POST",
-                    "url": "/api/pages/<username>/summary",
+                    "url": "/pages/<username>/summary",
                     "description": "Generate AI-powered page analysis",
-                    "example": "/api/pages/nike/summary"
+                    "example": "/pages/nike/summary"
                 }
             },
             "status": {
@@ -58,24 +61,10 @@ def welcome():
                 "database": db_status,
                 "last_updated": datetime.utcnow().isoformat(),
                 "timezone": "UTC"
-            },
-            "statistics": {
-                "total_pages_analyzed": total_pages,
-                "total_summaries_generated": total_summaries
-            },
-            "documentation": {
-                "github": "https://github.com/yourusername/facebook-insights-api",
-                "postman": "Link to Postman collection"
-            },
-            "contact": {
-                "developer": "Your Name",
-                "email": "your.email@example.com",
-                "github": "https://github.com/yourusername"
             }
         },
         "meta": {
             "timestamp": datetime.utcnow().isoformat(),
-            "server_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
             "request_id": str(ObjectId())
         }
     })

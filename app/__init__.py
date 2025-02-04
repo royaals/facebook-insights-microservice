@@ -15,9 +15,9 @@ def create_app():
     
     # Register blueprints
     from app.routes.page_routes import pages_bp
-    app.register_blueprint(pages_bp)
+    app.register_blueprint(pages_bp)  # Register without prefix
     
-    # Register global error handlers
+    # Register error handlers
     @app.errorhandler(404)
     def not_found_error(error):
         return jsonify({
@@ -39,5 +39,5 @@ def create_app():
                 "details": str(error)
             }
         }), 500
-    
+
     return app
