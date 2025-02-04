@@ -19,24 +19,24 @@ class FacebookScraper:
 
     async def scrape_page(self, username):
         try:
-            # Visit Facebook page
+            
             self.driver.get(f"https://www.facebook.com/{username}")
-            time.sleep(5)  # Wait for page to load
+            time.sleep(5)  
 
-            # Get basic page data
+            
             data = await self._scrape_basic_data()
             
-            # Handle profile picture
+            
             if data['profile_pic_url']:
                 image_path = os.path.join('temp', 'profile_pic.jpg')
                 os.makedirs('temp', exist_ok=True)
                 
-                # Download and upload to GridFS
+                
                 await download_image(data['profile_pic_url'], image_path)
                 uploaded_file = await self.gridfs_service.upload_file(image_path)
                 data['profile_pic_url'] = uploaded_file.filename
 
-            # Get posts data
+            
             posts_data = await self._scrape_posts()
             data['posts'] = posts_data
 
@@ -50,25 +50,25 @@ class FacebookScraper:
 
 def _parse_number(self, text):
     try:
-        # Remove any non-numeric characters except dots and commas
+        
         text = text.strip().lower()
         
-        # Handle 'M' (million)
+        
         if 'm' in text:
             number = float(text.replace('m', '').replace(',', '').strip())
             return int(number * 1000000)
         
-        # Handle 'K' (thousand)
+        
         if 'k' in text:
             number = float(text.replace('k', '').replace(',', '').strip())
             return int(number * 1000)
         
-        # Handle 'B' (billion)
+        
         if 'b' in text:
             number = float(text.replace('b', '').replace(',', '').strip())
             return int(number * 1000000000)
         
-        # Handle regular numbers
+        
         return int(float(text.replace(',', '').strip()))
     except:
         return 0

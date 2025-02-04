@@ -9,16 +9,16 @@ pages_bp = Blueprint('pages', __name__, url_prefix='/api')
 @pages_bp.route('/pages/<username>', methods=['GET'])
 async def get_page(username):
     try:
-        # Check if page exists in DB
+        
         existing_page = mongo.db.pages.find_one({'username': username.lower()})
         
         if not existing_page:
-            # Scrape page if not in DB
+            
             scraper = FacebookScraper()
             scraped_data = await scraper.scrape_page(username)
             
             if scraped_data:
-                # Format the data to match Page model
+                
                 page_data = {
                     'page_name': scraped_data.get('page_name'),
                     'username': username,
@@ -62,7 +62,7 @@ async def get_page(username):
 @pages_bp.route('/pages/<username>/summary', methods=['GET', 'POST'])
 async def generate_page_summary(username):
     try:
-        # Get page data
+        
         page = mongo.db.pages.find_one({'username': username.lower()})
         if not page:
             return jsonify({
@@ -70,11 +70,11 @@ async def generate_page_summary(username):
                 "error": "Page not found"
             }), 404
 
-        # Format numbers for display
+        
         followers = page.get('followers', 0)
         likes = page.get('likes', 0)
 
-        # Generate summary
+        
         ai_service = AISummaryService()
         summary = await ai_service.generate_summary(page)
         
@@ -84,7 +84,7 @@ async def generate_page_summary(username):
                 "error": "Failed to generate summary"
             }), 500
 
-        # Update page with summary
+        
         mongo.db.pages.update_one(
             {'username': username.lower()},
             {'$set': {'ai_summary': summary}}

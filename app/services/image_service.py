@@ -4,7 +4,7 @@ import os
 
 async def download_image(url: str, file_path: str) -> bool:
     try:
-        # Create directory if it doesn't exist
+        
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         async with aiohttp.ClientSession() as session:

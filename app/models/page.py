@@ -9,7 +9,7 @@ class Page:
         self.page_name = page_name
         self.username = username
         self.page_url = page_url
-        self.profile_pic = profile_pic_url  # Changed from profile_pic to match scraper output
+        self.profile_pic = profile_pic_url  
         self.email = email
         self.website = website
         self.category = category

@@ -17,7 +17,7 @@ class GridFSService:
                     content_type='image/jpeg'
                 )
             
-            # Clean up the temporary file
+            
             os.remove(file_path)
             
             return self.fs.get(file_id)

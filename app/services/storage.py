@@ -20,17 +20,17 @@ class StorageService:
             if not image_url:
                 return None
 
-            # Generate unique filename
+            
             file_extension = self._get_file_extension(image_url)
             filename = self._generate_unique_filename(image_url, file_extension)
             key = f"{folder}/{filename}"
 
-            # Download image
+            
             response = requests.get(image_url)
             if response.status_code != 200:
                 return image_url
 
-            # Upload to S3
+            
             self.s3.put_object(
                 Bucket=self.bucket,
                 Key=key,

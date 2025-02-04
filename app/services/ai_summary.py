@@ -16,7 +16,7 @@ class AISummaryService:
             if not self.api_key:
                 raise ValueError("OpenAI API key not configured")
 
-            # Prepare the analysis data
+            
             followers = page_data.get('followers', 0)
             likes = page_data.get('likes', 0)
             category = page_data.get('category', 'Unknown')
@@ -54,7 +54,7 @@ class AISummaryService:
                 print(f"OpenAI API error: {str(e)}")
                 main_summary = self._generate_fallback_summary(page_data)
 
-            # Determine engagement metrics
+            
             engagement_level = self._calculate_engagement_level(followers)
             page_type = self._determine_page_type(category)
             content_strategy = self._suggest_content_strategy(category)
