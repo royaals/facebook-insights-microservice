@@ -6,6 +6,51 @@ from app.models.page import Page
 
 pages_bp = Blueprint('pages', __name__, url_prefix='/api')
 
+@pages_bp.route('/', methods=['GET'])
+def welcome():
+    """Welcome endpoint with API information"""
+    return jsonify({
+        "success": True,
+        "data": {
+            "name": "Facebook Insights Microservice API",
+            "version": "1.0.0",
+            "description": "A service to analyze Facebook pages and provide insights",
+            "endpoints": {
+                "get_page": {
+                    "method": "GET",
+                    "url": "/api/pages/<username>",
+                    "description": "Get Facebook page details and analytics",
+                    "example": "/api/pages/nike"
+                },
+                "generate_summary": {
+                    "method": "POST",
+                    "url": "/api/pages/<username>/summary",
+                    "description": "Generate AI-powered page analysis",
+                    "example": "/api/pages/nike/summary"
+                }
+            },
+            "status": {
+                "service": "active",
+                "database": "connected",
+                "last_updated": datetime.utcnow().isoformat(),
+                "timezone": "UTC"
+            },
+            "documentation": {
+                "github": "https://github.com/yourusername/facebook-insights-api",
+                "postman": "Link to Postman collection"
+            },
+            "contact": {
+                "developer": "Your Name",
+                "email": "your.email@example.com",
+                "github": "https://github.com/yourusername"
+            }
+        },
+        "meta": {
+            "timestamp": datetime.utcnow().isoformat(),
+            "server_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        }
+    })
+
 @pages_bp.route('/pages/<username>', methods=['GET'])
 async def get_page(username):
     try:
