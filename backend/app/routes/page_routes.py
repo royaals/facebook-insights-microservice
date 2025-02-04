@@ -1,234 +1,113 @@
 from flask import Blueprint, jsonify, request
 from app import mongo
 from app.services.scraper import FacebookScraper
-from app.services.ai_summary import AISummary
-from app.utils.helpers import format_page_response
-from datetime import datetime
-from bson import ObjectId
+from app.services.ai_summary import AISummaryService
+from app.models.page import Page
 
 pages_bp = Blueprint('pages', __name__, url_prefix='/api')
 
-@pages_bp.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        "status": "healthy",
-        "message": "API is running",
-        "server_time": datetime.utcnow().isoformat(),
-        "database_status": "connected"
-    })
-
-@pages_bp.route('/page/<username>', methods=['GET'])
+@pages_bp.route('/pages/<username>', methods=['GET'])
 async def get_page(username):
-    """Get page details by username"""
     try:
         # Check if page exists in DB
-        page = mongo.db.pages.find_one({'username': username.lower()})
+        existing_page = mongo.db.pages.find_one({'username': username.lower()})
         
-        if not page:
+        if not existing_page:
             # Scrape page if not in DB
             scraper = FacebookScraper()
-            page_data = await scraper.scrape_page(username)
+            scraped_data = await scraper.scrape_page(username)
             
-            if page_data:
-                # Generate AI summary
-                ai = AISummary()
-                summary = ai.generate_page_summary(page_data.to_dict())
-                if summary:
-                    page_data.ai_summary = summary
+            if scraped_data:
+                # Format the data to match Page model
+                page_data = {
+                    'page_name': scraped_data.get('page_name'),
+                    'username': username,
+                    'page_url': f"https://facebook.com/{username}",
+                    'profile_pic_url': scraped_data.get('profile_pic_url'),
+                    'email': scraped_data.get('email'),
+                    'website': scraped_data.get('website'),
+                    'category': scraped_data.get('category'),
+                    'followers': int(scraped_data.get('followers', 0)),
+                    'likes': int(scraped_data.get('likes', 0)),
+                    'posts': scraped_data.get('posts', []),
+                    'followers_type': scraped_data.get('followers_type', 'Active')
+                }
 
-                # Store in DB
-                page_dict = page_data.to_dict()
+                # Create and save page
+                page = Page(**page_data)
+                page_dict = page.to_dict()
                 mongo.db.pages.insert_one(page_dict)
                 
-                # Format response
-                response_data = format_page_response(page_dict)
                 return jsonify({
                     "success": True,
-                    "data": response_data
+                    "data": page_dict
                 })
             
             return jsonify({
                 "success": False,
-                "error": {
-                    "code": "PAGE_NOT_FOUND",
-                    "message": "Page not found"
-                }
+                "error": "Page not found"
             }), 404
         
-        # Format response for existing page
-        response_data = format_page_response(page)
         return jsonify({
             "success": True,
-            "data": response_data
+            "data": existing_page
         })
     
     except Exception as e:
         return jsonify({
             "success": False,
-            "error": {
-                "code": "INTERNAL_SERVER_ERROR",
-                "message": str(e)
-            }
+            "error": str(e)
         }), 500
 
-@pages_bp.route('/pages', methods=['GET'])
-def get_pages():
-    """Get pages with filters"""
+@pages_bp.route('/pages/<username>/summary', methods=['GET', 'POST'])
+async def generate_page_summary(username):
     try:
-        # Get query parameters
-        follower_min = int(request.args.get('follower_min', 0))
-        follower_max = int(request.args.get('follower_max', float('inf')))
-        category = request.args.get('category')
-        name = request.args.get('name')
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 10))
-
-        # Build query
-        query = {
-            'followers_count': {
-                '$gte': follower_min,
-                '$lte': follower_max
-            }
-        }
-        if category:
-            query['category'] = {'$regex': category, '$options': 'i'}
-        if name:
-            query['name'] = {'$regex': name, '$options': 'i'}
-
-        # Execute query with pagination
-        total = mongo.db.pages.count_documents(query)
-        pages = list(mongo.db.pages.find(query)
-                    .skip((page-1)*per_page)
-                    .limit(per_page))
-        
-        # Format response
-        response_data = [format_page_response(p) for p in pages]
-        
-        return jsonify({
-            "success": True,
-            "data": {
-                "pages": response_data,
-                "pagination": {
-                    "current_page": page,
-                    "per_page": per_page,
-                    "total_items": total,
-                    "total_pages": (total + per_page - 1) // per_page
-                }
-            },
-            "meta": {
-                "filters_applied": {
-                    "follower_min": follower_min,
-                    "follower_max": follower_max,
-                    "category": category,
-                    "name": name
-                },
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        })
-    
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": {
-                "code": "INTERNAL_SERVER_ERROR",
-                "message": str(e)
-            }
-        }), 500
-
-@pages_bp.route('/page/<username>/posts', methods=['GET'])
-def get_page_posts(username):
-    """Get posts for a specific page"""
-    try:
+        # Get page data
         page = mongo.db.pages.find_one({'username': username.lower()})
         if not page:
             return jsonify({
                 "success": False,
-                "error": {
-                    "code": "PAGE_NOT_FOUND",
-                    "message": "Page not found"
-                }
+                "error": "Page not found"
             }), 404
 
-        limit = int(request.args.get('limit', 15))
-        page_num = int(request.args.get('page', 1))
+        # Format numbers for display
+        followers = page.get('followers', 0)
+        likes = page.get('likes', 0)
 
-        posts = list(mongo.db.posts.find({'page_id': str(page['_id'])})
-                    .sort('created_at', -1)
-                    .skip((page_num-1)*limit)
-                    .limit(limit))
+        # Generate summary
+        ai_service = AISummaryService()
+        summary = await ai_service.generate_summary(page)
         
-        total = mongo.db.posts.count_documents({'page_id': str(page['_id'])})
-        
+        if not summary:
+            return jsonify({
+                "success": False,
+                "error": "Failed to generate summary"
+            }), 500
+
+        # Update page with summary
+        mongo.db.pages.update_one(
+            {'username': username.lower()},
+            {'$set': {'ai_summary': summary}}
+        )
+
         return jsonify({
             "success": True,
             "data": {
-                "posts": posts,
-                "pagination": {
-                    "current_page": page_num,
-                    "per_page": limit,
-                    "total_items": total,
-                    "total_pages": (total + limit - 1) // limit
-                }
+                "page_name": page.get('page_name'),
+                "category": page.get('category'),
+                "stats": {
+                    "followers": followers,
+                    "likes": likes,
+                    "followers_formatted": f"{followers:,}",
+                    "likes_formatted": f"{likes:,}"
+                },
+                "ai_summary": summary
             }
         })
-    
+
     except Exception as e:
+        print(f"Error in generate_page_summary: {str(e)}")
         return jsonify({
             "success": False,
-            "error": {
-                "code": "INTERNAL_SERVER_ERROR",
-                "message": str(e)
-            }
-        }), 500
-
-@pages_bp.route('/search', methods=['GET'])
-def search_pages():
-    """Search pages by name or category"""
-    try:
-        query = request.args.get('q', '')
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 10))
-
-        # Build search query
-        search_query = {
-            '$or': [
-                {'name': {'$regex': query, '$options': 'i'}},
-                {'category': {'$regex': query, '$options': 'i'}}
-            ]
-        }
-
-        # Execute query with pagination
-        total = mongo.db.pages.count_documents(search_query)
-        pages = list(mongo.db.pages.find(search_query)
-                    .skip((page-1)*per_page)
-                    .limit(per_page))
-        
-        # Format response
-        response_data = [format_page_response(p) for p in pages]
-        
-        return jsonify({
-            "success": True,
-            "data": {
-                "results": response_data,
-                "pagination": {
-                    "current_page": page,
-                    "per_page": per_page,
-                    "total_items": total,
-                    "total_pages": (total + per_page - 1) // per_page
-                }
-            },
-            "meta": {
-                "search_query": query,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        })
-    
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": {
-                "code": "INTERNAL_SERVER_ERROR",
-                "message": str(e)
-            }
+            "error": str(e)
         }), 500
